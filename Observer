@@ -1,0 +1,75 @@
+Призначення
+Визначає залежність типу «один до багатьох» між об'єктами таким чином, що при зміні стану одного об'єкта всіх залежних від нього сповіщають про цю подію.
+
+Переваги
+Він підтримує принцип вільного зв'язку між об'єктами, які взаємодіють один з одним
+Дозволяє ефективно передавати дані іншим об'єктам, без будь-яких змін у класах Subject або Observer
+Спостерігачі можуть бути додані / видалені в будь-який момент часу
+Недоліки
+Інтерфейс Observer повинен бути впроваджений ConcreteObserver, який передбачає успадкування. Композиції для композиції немає, оскільки інтерфейс Observer може бути екземплятором.
+Якщо це неправильно реалізовано, спостерігач може додати складність і призвести до ненавмисних проблем із продуктивністю.
+У програмному застосуванні повідомлення іноді можуть бути невибагливими і призвести до умов перегонів або непослідовності.
+
+#include <iostream>
+#include <string>
+#include <map>
+
+class SupervisedString;
+class IObserver {
+  public:
+  virtual void handleEvent (const SupervisedString&) = 0;
+};
+
+class SupervisedString{ // Спостережний клас
+  std::string _str;
+  std::map<IObserver* const, IObserver* const> _observers;
+  void _Notify() {
+    for (auto &iter : _observers) {
+      iter.second->handleEvent (*this);
+    }
+  }
+  public:
+  void add (IObserver& ref) {
+    _observers.insert (item (&ref, &ref));
+  }
+  void remove (IObserver& ref) {
+    _observers.erase (&ref);
+  }
+  const std::string& get() const {
+    return _str;
+  }
+  void reset (std::string str) {
+    _str = str;
+    _Notify();
+  }
+};
+
+class Reflector: public IObserver{ // Надрукувати спостережуваний рядок у std::cout
+  public:
+  virtual void handleEvent (const SupervisedString& ref) {
+    std::cout<<ref.get()<<std::endl;
+  }
+};
+
+class Counter: public IObserver{ // Надрукувати довжину спостережуваного рядка в std::cout
+  virtual void handleEvent (const SupervisedString& ref) {
+    std::cout<<"length = "<<ref.get().length()<<std::endl;
+  }
+};
+
+int main() {
+  SupervisedString str;
+  Reflector refl;
+  Counter cnt;
+
+  str.add (refl);
+  str.reset ("Hello, World!");
+  std::cout<<std::endl;
+
+  str.remove (refl);
+  str.add (cnt);
+  str.reset ("World, Hello!");
+  std::cout<<std::endl;
+
+  return 0;
+}
